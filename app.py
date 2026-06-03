@@ -7,8 +7,8 @@ st.set_page_config(layout="wide")
 
 # 1. ตั้งชื่อหัวข้อบนหน้าเว็บ
 st.title("ระบบสรุปรายการทิ้ง Specimen ประจำวัน 🔬")
-st.write(f"ประจำวันที่: {datetime.date.today().strftime('%d/%m/%Y')}")
-
+th_date = datetime.date.today() + datetime.timedelta(hours=7)
+st.write(f"ประจำวันที่: {th_date.strftime('%d/%m/%Y')}")
 # 2. จำลองข้อมูลสิ่งส่งตรวจและใช้ Session State บันทึกข้อมูล
 if "df" not in st.session_state:
     data = {
