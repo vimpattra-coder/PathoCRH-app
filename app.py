@@ -2,268 +2,176 @@ import streamlit as st
 import pandas as pd
 import datetime
 
-# ตั้งค่าหน้าเว็บให้เป็นแบบขยายกว้างเต็มจอ
+# ตั้งค่าหน้าเว็บ
 st.set_page_config(layout="wide")
 
-# 1. ตั้งชื่อหัวข้อบนหน้าเว็บ
+# 1. หัวข้อและวันที่ (ดึงเวลาไทย)
 st.title("ระบบสรุปรายการทิ้ง Specimen ประจำวัน 🔬")
-# ใช้ .now() เพื่อดึงเวลาปัจจุบัน (รวมชั่วโมง) แล้วบวก 7 ชม. เพื่อเข้า Timezone ไทย
 th_date = (datetime.datetime.now() + datetime.timedelta(hours=7)).date()
 st.write(f"ประจำวันที่: {th_date.strftime('%d/%m/%Y')}")
-# 2. จำลองข้อมูลสิ่งส่งตรวจและใช้ Session State บันทึกข้อมูล
+
+# 2. จำลองข้อมูล
 if "df" not in st.session_state:
     data = {
-        "เลขเคส (SN)": [
-            "SN69-001", "SN69-002", 
-            "SN69-003", "SN69-004", 
-            "SN69-005", "SN69-006", "SN69-007", "SN69-008", "SN69-009",
-            "SN69-010"  
-        ],
-        "HN": [
-            "1234567", "1234567", 
-            "2345678", "3456789", 
-            "5556667", "6667778", "7778889", "8889990", "9990001",
-            "9990002"  
-        ],
-        "ชื่อผู้ป่วย": [
-            "นายสมชาย ดีใจ", "นายสมชาย ดีใจ", "นางสมศรี มีสุข", "นายสมศักดิ์ รักดี",
-            "นายมานะ เก่งกาจ", "นางชูใจ รักเรียน", "นายปิติ สุขใจ", "นางสาววีระ ปัญญา", "นายสมนึก นอบน้อม",
-            "นางสมหญิง รักสงบ"  
-        ],
-        "วันที่ออกผลล่าสุด": [
-            datetime.date(2026, 6, 1), datetime.date(2026, 6, 1), datetime.date(2026, 5, 28), datetime.date(2026, 6, 2), 
-            datetime.date(2026, 5, 12), datetime.date(2026, 5, 13), datetime.date(2026, 5, 14), datetime.date(2026, 5, 15), datetime.date(2026, 5, 11),
-            datetime.date(2026, 6, 2)  
-        ],
-        "แพทย์เจ้าของเคส": ["VT", "VT", "NK", "KK", "PS", "NK", "VT", "PS", "KK", "NK"], 
-        "หมายเหตุ/เหตุผล": ["", "", "", "", "", "", "", "", "", ""],
-        "สถานะพิเศษ": [None, None, None, None, None, None, None, None, None, None], 
-        "วันกำหนดทิ้งปรับปรุง": [None, None, None, None, None, None, None, None, None, None], 
-        "การทิ้งชิ้นเนื้อ": [
-            "ยังไม่ได้ทิ้ง", "ยังไม่ได้ทิ้ง", "ยังไม่ได้ทิ้ง", "ยังไม่ได้ทิ้ง",
-            "ยังไม่ได้ทิ้ง", "ยังไม่ได้ทิ้ง", "ยังไม่ได้ทิ้ง", "ยังไม่ได้ทิ้ง", "ยังไม่ได้ทิ้ง",
-            "ยังไม่ได้ทิ้ง"
-        ],
-        "วันที่กดทิ้ง": [None, None, None, None, None, None, None, None, None, None]
+        "Surgical No.": ["S690001", "S690002", "S690003", "S690004", "S690005", "S690006", "S690007", "S690008", "S690009", "S690010"],
+        "HN": ["1234567", "1234567", "2345678", "3456789", "5556667", "6667778", "7778889", "8889990", "9990001", "9990002"],
+        "ชื่อผู้ป่วย": ["นายสมชาย ดีใจ", "นายสมชาย ดีใจ", "นางสมศรี มีสุข", "นายสมศักดิ์ รักดี", "นายมานะ เก่งกาจ", "นางชูใจ รักเรียน", "นายปิติ สุขใจ", "นางสาววีระ ปัญญา", "นายสมนึก นอบน้อม", "นางสมหญิง รักสงบ"],
+        "วันที่ออกผลล่าสุด": [datetime.date(2026, 6, 1), datetime.date(2026, 6, 1), datetime.date(2026, 5, 28), datetime.date(2026, 6, 2), datetime.date(2026, 5, 12), datetime.date(2026, 5, 13), datetime.date(2026, 5, 14), datetime.date(2026, 5, 15), datetime.date(2026, 5, 11), datetime.date(2026, 6, 2)],
+        "แพทย์เจ้าของเคส": ["VT", "VT", "NK", "KK", "PS", "NK", "VT", "PS", "KK", "NK"],
+        "หมายเหตุ/เหตุผล": [""]*10,
+        "สถานะพิเศษ": [None]*10,
+        "วันกำหนดทิ้งปรับปรุง": [None]*10,
+        "การทิ้งชิ้นเนื้อ": ["ยังไม่ได้ทิ้ง"]*10,
+        "วันที่กดทิ้ง": [None]*10
     }
     st.session_state.df = pd.DataFrame(data)
 
 df = st.session_state.df
-
-# แปลงฟอร์แมตวันที่ให้อยู่ในรูปแบบที่ถูกต้องสำหรับคำนวณ
 df["วันที่ออกผลล่าสุด"] = pd.to_datetime(df["วันที่ออกผลล่าสุด"]).dt.date
+df["วันที่กดทิ้ง"] = pd.to_datetime(df["วันที่กดทิ้ง"])
 
-# 3. สูตรคำนวณวันกำหนดทิ้งสุดท้าย
+# 3. คำนวณกำหนดทิ้ง
 def calculate_final_date(row):
-    if row["สถานะพิเศษ"] == "Consult/IHC":
-        return "-"
-    elif pd.notnull(row["วันกำหนดทิ้งปรับปรุง"]):
-        return row["วันกำหนดทิ้งปรับปรุง"]
-    else:
-        return row["วันที่ออกผลล่าสุด"] + datetime.timedelta(days=15)
+    if row["สถานะพิเศษ"] == "Consult/IHC": return "-"
+    if pd.notnull(row["วันกำหนดทิ้งปรับปรุง"]): return row["วันกำหนดทิ้งปรับปรุง"]
+    return row["วันที่ออกผลล่าสุด"] + datetime.timedelta(days=15)
 
 df["กำหนดทิ้งสุดท้าย"] = df.apply(calculate_final_date, axis=1)
 
+def get_status(row):
+    if row["การทิ้งชิ้นเนื้อ"] == "ทิ้งแล้ว": return "⚫ ทิ้งเรียบร้อยแล้ว"
+    if row["กำหนดทิ้งสุดท้าย"] == "-": return "⏳ ห้ามทิ้ง (รอ Consult/IHC)"
+    d_limit = row["กำหนดทิ้งสุดท้าย"] if isinstance(row["กำหนดทิ้งสุดท้าย"], datetime.date) else datetime.date.today()
+    return "🟢 ครบกำหนด (ทิ้งได้)" if th_date >= d_limit else "🔵 กำลังเก็บรักษา"
 
-# 4. ตรรกะกำหนดข้อความแสดง "สถานะ"
-def check_status(row):
-    if row["การทิ้งชิ้นเนื้อ"] == "ทิ้งแล้ว":
-        return "⚫ ทิ้งเรียบร้อยแล้ว"
-    elif row["กำหนดทิ้งสุดท้าย"] == "-":
-        return "⏳ ห้ามทิ้ง (รอ Consult/IHC)"
-    elif datetime.date.today() >= row["กำหนดทิ้งสุดท้าย"]:
-        return "🟢 ครบกำหนด (ทิ้งได้)"
-    else:
-        return "🔵 กำลังเก็บรักษา"
+df["สถานะ"] = df.apply(get_status, axis=1)
 
-df["สถานะ"] = df.apply(check_status, axis=1)
-
-
-# 5. ส่วนระบบค้นหา (Search System)
+# 4. ค้นหาและจัดการเคสรายบุคคล
 st.subheader("🔍 ค้นหาและจัดการเคสรายบุคคล")
-search_query = st.text_input("พิมพ์เลขเคส (SN) หรือเลข HN ที่ต้องการค้นหา:", placeholder="เช่น SN69-010 หรือ 9990002").strip()
+search_query = st.text_input("พิมพ์เลขเคส (SN) หรือเลข HN ที่ต้องการค้นหา:", placeholder="เช่น S690010").strip()
 
 if search_query:
-    search_result = df[
-        df["เลขเคส (SN)"].str.contains(search_query, case=False, na=False) | 
-        df["HN"].str.contains(search_query, case=False, na=False)
-    ]
+    mask = df["Surgical No."].str.contains(search_query, case=False, na=False) | df["HN"].str.contains(search_query, case=False, na=False)
+    search_result = df[mask]
     
     if not search_result.empty:
-        st.markdown("**ผลการค้นหา:**")
-        
-        s_h1, s_h2, s_h3, s_h4, s_h5, s_h6, s_h7 = st.columns([1.2, 1.0, 1.8, 1.2, 1.2, 1.5, 1.5])
-        with s_h1: st.markdown("**เลขเคส (SN)**")
-        with s_h2: st.markdown("**HN**")
-        with s_h3: st.markdown("**ชื่อผู้ป่วย**")
-        with s_h4: st.markdown("**ออกผลล่าสุด**")
-        with s_h5: st.markdown("**กำหนดทิ้ง**")
-        with s_h6: st.markdown("**เงื่อนไข 1**") 
-        with s_h7: st.markdown("**เงื่อนไข 2**") 
+        st.write("ผลการค้นหา:")
+        cols_header = st.columns([1, 1, 2, 1.5, 1.5, 2, 2])
+        cols_header[0].write("**เลขเคส (SN)**")
+        cols_header[1].write("**HN**")
+        cols_header[2].write("**ชื่อผู้ป่วย**")
+        cols_header[3].write("**ออกผลล่าสุด**")
+        cols_header[4].write("**กำหนดทิ้ง**")
+        cols_header[5].write("**เงื่อนไข 1**")
+        cols_header[6].write("**เงื่อนไข 2**")
         st.markdown("---")
         
         for idx, row in search_result.iterrows():
-            s_r1, s_r2, s_r3, s_r4, s_r5, s_r6, s_r7 = st.columns([1.2, 1.0, 1.8, 1.2, 1.2, 1.5, 1.5])
-            with s_r1: st.write(row["เลขเคส (SN)"])
-            with s_r2: st.write(row["HN"])
-            with s_r3: st.write(row["ชื่อผู้ป่วย"])
+            cols = st.columns([1, 1, 2, 1.5, 1.5, 2, 2])
+            cols[0].write(row["Surgical No."])
+            cols[1].write(row["HN"])
+            cols[2].write(row["ชื่อผู้ป่วย"])
+            cols[3].write(row["วันที่ออกผลล่าสุด"].strftime('%d/%m/%Y'))
             
-            # แสดงผลวันที่ออกผลล่าสุดในโหมดค้นหา เป็น วัน/เดือน/ปี ค.ศ.
-            with s_r4: st.write(row["วันที่ออกผลล่าสุด"].strftime('%d/%m/%Y'))
-            
-            with s_r5: 
-                if isinstance(row["กำหนดทิ้งสุดท้าย"], datetime.date):
-                    st.write(row["กำหนดทิ้งสุดท้าย"].strftime('%d/%m/%Y'))
-                else:
-                    st.write(f"**{row['กำหนดทิ้งสุดท้าย']}**")
-            
-            if row["การทิ้งชิ้นเนื้อ"] == "ทิ้งแล้ว":
-                with s_r5:
-                    st.markdown("<span style='color: gray;'>⚫ ทิ้งเรียบร้อยแล้ว</span>", unsafe_allow_html=True)
-                with s_r6:
-                    st.write("")
+            # --- แก้ไขการแสดงผลช่องกำหนดทิ้ง ---
+            if row["สถานะพิเศษ"] == "Consult/IHC":
+                cols[4].write("ยังไม่มีกำหนด")
             else:
-                with s_r6:
-                    if row["สถานะพิเศษ"] == "Consult/IHC":
-                        btn_final = st.button("🟢 Final เคสนี้", key=f"btn_fin_{idx}", use_container_width=True)
-                        if btn_final:
-                            today = datetime.date.today()
-                            df.loc[idx, "สถานะพิเศษ"] = None
-                            df.loc[idx, "วันที่ออกผลล่าสุด"] = today
-                            df.loc[idx, "วันกำหนดทิ้งปรับปรุง"] = today + datetime.timedelta(days=15)
-                            df.loc[idx, "หมายเหตุ/เหตุผล"] = f"ออกผล Final แล้วเมื่อ {today.strftime('%d/%m/%Y')} (Extend 15 วัน)"
-                            st.toast(f"🟢 ปลดล็อกและออกผล Final เคส {row['เลขเคส (SN)']} เรียบร้อย")
-                            st.rerun()
-                    else:
-                        btn_cnc = st.button("🟡 Consult / IHC", key=f"btn_cnc_{idx}", use_container_width=True)
-                        if btn_cnc:
-                            df.loc[idx, "สถานะพิเศษ"] = "Consult/IHC"
-                            df.loc[idx, "วันกำหนดทิ้งปรับปรุง"] = None
-                            df.loc[idx, "หมายเหตุ/เหตุผล"] = "อยู่ระหว่าง Consult หรือรอย้อม IHC"
-                            st.toast(f"🔒 ล็อกเคส {row['เลขเคส (SN)']} เรียบร้อย")
-                            st.rerun()
-                        
-                with s_r7:
-                    btn_ext = st.button("🔵 ผลเพิ่มเติม (+15 วัน)", key=f"btn_ext_{idx}", use_container_width=True)
-                    if btn_ext:
-                        today = datetime.date.today()
-                        df.loc[idx, "สถานะพิเศษ"] = None
-                        df.loc[idx, "วันที่ออกผลล่าสุด"] = today
-                        df.loc[idx, "วันกำหนดทิ้งปรับปรุง"] = today + datetime.timedelta(days=15)
-                        df.loc[idx, "หมายเหตุ/เหตุผล"] = f"มีผลเพิ่มเติมเมื่อ {today.strftime('%d/%m/%Y')} (Extend 15 วัน)"
-                        st.toast(f"🔄 อัปเดตผลล่าสุดและต่อเวลาเคส {row['เลขเคส (SN)']} สำเร็จ")
-                        st.rerun()
-        st.markdown("---")
+                due_date = row["กำหนดทิ้งสุดท้าย"]
+                if isinstance(due_date, (datetime.date, pd.Timestamp)):
+                    cols[4].write(due_date.strftime('%d/%m/%Y'))
+                else:
+                    cols[4].write("-")
+            # --------------------------------
+            
+            is_consult = (row["สถานะพิเศษ"] == "Consult/IHC")
+            
+            if not is_consult:
+                if cols[5].button("🟡 Consult / IHC", key=f"btn1_{idx}"):
+                    df.loc[idx, ["สถานะพิเศษ", "หมายเหตุ/เหตุผล"]] = ["Consult/IHC", "รอ Consult/IHC"]
+                    st.rerun()
+            else:
+                if cols[5].button("🟢 Final เคสนี้", key=f"btn_f_{idx}"):
+                    df.loc[idx, ["สถานะพิเศษ", "หมายเหตุ/เหตุผล", "วันที่ออกผลล่าสุด", "วันกำหนดทิ้งปรับปรุง"]] = [
+                        None, "Final แล้ว", th_date, th_date + datetime.timedelta(days=15)
+                    ]
+                    st.rerun()
+            
+            if cols[6].button("🔵 ผลเพิ่มเติม (+15 วัน)", key=f"btn2_{idx}"):
+                df.loc[idx, ["สถานะพิเศษ", "หมายเหตุ/เหตุผล", "วันที่ออกผลล่าสุด", "วันกำหนดทิ้งปรับปรุง"]] = [
+                    None, "ผลเพิ่มเติม", th_date, th_date + datetime.timedelta(days=15)
+                ]
+                st.rerun()
     else:
-        st.warning(f"❌ ไม่พบข้อมูลเลขเคส หรือ HN '{search_query}' ในระบบ")
+        st.warning("ไม่พบข้อมูล")
 
+# 5. แสดงตารางหลัก (บังคับแสดงเป็น วัน/เดือน/ปี หรือ - เท่านั้น)
+mask_threw = (df["การทิ้งชิ้นเนื้อ"] == "ทิ้งแล้ว") & (pd.notnull(df["วันที่กดทิ้ง"]))
+active_mask = ~mask_threw
+filtered_df = df[active_mask | (mask_threw & (df["วันที่กดทิ้ง"].dt.date == th_date))].copy()
 
-# 6. คัดกรองวันถัดไปเคลียร์ออก
-def filter_cases(row):
-    if row["การทิ้งชิ้นเนื้อ"] == "ทิ้งแล้ว" and pd.notnull(row["วันที่กดทิ้ง"]):
-        days_passed = (datetime.date.today() - row["วันที่กดทิ้ง"]).days
-        if days_passed >= 1:
-            return False
-    return True
+display_df = filtered_df[["Surgical No.", "HN", "ชื่อผู้ป่วย", "แพทย์เจ้าของเคส", "วันที่ออกผลล่าสุด", "กำหนดทิ้งสุดท้าย", "สถานะ", "หมายเหตุ/เหตุผล"]].copy()
 
-active_mask = df.apply(filter_cases, axis=1)
-filtered_df = df[active_mask].copy() # ใช้ .copy() ป้องกันข้อผิดพลาดตอนกรองข้อมูล
+# แปลงวันที่ออกผลล่าสุดให้เป็น วัน/เดือน/ปี
+display_df["วันที่ออกผลล่าสุด"] = display_df["วันที่ออกผลล่าสุด"].apply(lambda x: x.strftime('%d/%m/%Y') if isinstance(x, (datetime.date, pd.Timestamp)) else "-")
 
+# --- บังคับให้กำหนดทิ้งสุดท้ายเป็น วัน/เดือน/ปี เท่านั้น ถ้าไม่มีให้เป็น - ---
+def force_date_format(x):
+    if isinstance(x, (datetime.date, pd.Timestamp)):
+        return x.strftime('%d/%m/%Y')
+    else:
+        return "-"
 
-# 📍 7. โซนเตรียมตารางหลักสำหรับแสดงผล (จุดที่แทรกแปลงวันที่ วัน/เดือน/ปี ค.ศ.) 📍
-# สร้างตารางแยกเฉพาะสำหรับการโชว์ และเปลี่ยนรูปแบบแสดงผลวันที่ก่อนนำไปใส่ตาราง
-display_df = filtered_df[["เลขเคส (SN)", "HN", "ชื่อผู้ป่วย", "แพทย์เจ้าของเคส", "วันที่ออกผลล่าสุด", "กำหนดทิ้งสุดท้าย", "สถานะ", "หมายเหตุ/เหตุผล"]].copy()
+display_df["กำหนดทิ้งสุดท้าย"] = display_df["กำหนดทิ้งสุดท้าย"].apply(force_date_format)
+# --------------------------------------------------------------------------
 
-# แปลง 'วันที่ออกผลล่าสุด' เป็น วัน/เดือน/ปี
-display_df["วันที่ออกผลล่าสุด"] = pd.to_datetime(display_df["วันที่ออกผลล่าสุด"]).dt.strftime('%d/%m/%Y')
+display_df.index = range(1, len(display_df) + 1)
 
-# แปลง 'กำหนดทิ้งสุดท้าย' เป็น วัน/เดือน/ปี (ยกเว้นเคสที่เป็นเครื่องหมายลบ '-')
-display_df["กำหนดทิ้งสุดท้าย"] = display_df["กำหนดทิ้งสุดท้าย"].apply(
-    lambda x: x.strftime('%d/%m/%Y') if isinstance(x, datetime.date) else x
-)
-
-
-# แสดงผลตารางหลักทั้งหมดบนหน้าเว็บ
 st.subheader("📋 รายการสิ่งส่งตรวจทั้งหมดในระบบ")
 st.dataframe(display_df, use_container_width=True)
 
-
-# 8. โซน: สิ่งส่งตรวจที่ต้องทิ้งวันนี้ 
+# 6. สิ่งส่งตรวจที่ต้องทิ้งวันนี้ (บังคับแสดงวันที่เป็น วว/ดด/ปปปป)
 st.subheader("🗑️ สิ่งส่งตรวจที่ต้องทิ้งวันนี้")
-discard_today = filtered_df[
-    (filtered_df["สถานะ"] == "🟢 ครบกำหนด (ทิ้งได้)") |
-    (filtered_df["การทิ้งชิ้นเนื้อ"] == "ทิ้งแล้ว")
-]
-
-pending_discard = discard_today[discard_today["การทิ้งชิ้นเนื้อ"] == "ยังไม่ได้ทิ้ง"]
+pending_discard = filtered_df[filtered_df["สถานะ"] == "🟢 ครบกำหนด (ทิ้งได้)"].copy()
 
 if not pending_discard.empty:
-    
-    def toggle_select_all():
-        master_key = f"master_select_{len(pending_discard)}"
-        if master_key in st.session_state:
-            current_status = st.session_state[master_key]
-            for _, r in pending_discard.iterrows():
-                st.session_state[f"cb_{r['เลขเคส (SN)']}_{len(pending_discard)}"] = current_status
-
-    select_all = st.checkbox(
-        "📋 เลือกทั้งหมดของวันนี้", 
-        value=False, 
-        key=f"master_select_{len(pending_discard)}", 
-        on_change=toggle_select_all
+    # 1. แปลงวันที่ให้เป็น string ในรูปแบบที่ต้องการก่อนแสดงผล
+    pending_discard["กำหนดทิ้งสุดท้าย"] = pending_discard["กำหนดทิ้งสุดท้าย"].apply(
+        lambda x: x.strftime('%d/%m/%Y') if isinstance(x, (datetime.date, pd.Timestamp)) else str(x)
     )
-    st.markdown(" ")
-
-    h_col1, h_col2, h_col3, h_col4, h_col5, h_col6 = st.columns([0.8, 1.2, 1.2, 2.0, 1.2, 1.5])
-    with h_col1: st.markdown("**เลือกทิ้ง**")
-    with h_col2: st.markdown("**เลขเคส (SN)**")
-    with h_col3: st.markdown("**HN**")
-    with h_col4: st.markdown("**ชื่อผู้ป่วย**")
-    with h_col5: st.markdown("**แพทย์**")
-    with h_col6: st.markdown("**กำหนดทิ้งสุดท้าย**")
-    st.markdown("---")
     
-    selected_indices = []
-    
-    for idx, row in pending_discard.iterrows():
-        r_col1, r_col2, r_col3, r_col4, r_col5, r_col6 = st.columns([0.8, 1.2, 1.2, 2.0, 1.2, 1.5])
-        
-        sub_cb_key = f"cb_{row['เลขเคส (SN)']}_{len(pending_discard)}"
-        if sub_cb_key not in st.session_state:
-            st.session_state[sub_cb_key] = select_all
-            
-        with r_col1:
-            is_checked = st.checkbox("เลือก", key=sub_cb_key, label_visibility="collapsed")
-            if is_checked:
-                selected_indices.append(idx)
-                
-        with r_col2: st.write(row["เลขเคส (SN)"])
-        with r_col3: st.write(row["HN"])
-        with r_col4: st.write(row["ชื่อผู้ป่วย"])
-        with r_col5: st.write(row["แพทย์เจ้าของเคส"])
-        with r_col6: 
-            if isinstance(row["กำหนดทิ้งสุดท้าย"], datetime.date):
-                st.write(row["กำหนดทิ้งสุดท้าย"].strftime('%d/%m/%Y'))
-            else:
-                st.write(row["กำหนดทิ้งสุดท้าย"])
-                
-    st.markdown("---")
-    
-    btn_disabled = len(selected_indices) == 0
-    if st.button(f"🗑️ ยืนยันการทิ้งเคสที่เลือกไว้ ({len(selected_indices)} เคส)", use_container_width=True, type="primary", disabled=btn_disabled):
-        for idx in selected_indices:
-            df.loc[idx, "การทิ้งชิ้นเนื้อ"] = "ทิ้งแล้ว"
-            df.loc[idx, "วันที่กดทิ้ง"] = datetime.date.today()
-            
-            target_sn = df.loc[idx, "เลขเคส (SN)"]
-            del st.session_state[f"cb_{target_sn}_{len(pending_discard)}"]
-            
-        st.success(f"🗑️ ทำการบันทึกสถานะ 'ทิ้งแล้ว' สำหรับเคสที่เลือกเรียบร้อย")
-        st.rerun()
-
-else:
-    already_discarded = discard_today[discard_today["การทิ้งชิ้นเนื้อ"] == "ทิ้งแล้ว"]
-    if not already_discarded.empty:
-        st.success("✅ ดำเนินการยืนยันการทิ้งชิ้นเนื้อของวันนี้เรียบร้อยครบถ้วน")
+    # 2. สร้างสถานะการเลือก
+    if "all_selected" not in st.session_state: st.session_state.all_selected = False
+    if st.checkbox("📋 เลือกทั้งหมดของวันนี้", key="select_all_btn"):
+        st.session_state.all_selected = True
     else:
-        st.info("วันนี้ไม่มีสิ่งส่งตรวจที่ครบกำหนดทิ้ง")
+        st.session_state.all_selected = False
+
+    pending_discard["เลือก"] = st.session_state.all_selected
+    
+    # 3. แสดง Data Editor
+    edited_df = st.data_editor(
+        pending_discard[["เลือก", "Surgical No.", "HN", "ชื่อผู้ป่วย", "กำหนดทิ้งสุดท้าย"]],
+        column_config={
+            "เลือก": st.column_config.CheckboxColumn("เลือกทิ้ง", default=False),
+            "Surgical No.": st.column_config.TextColumn("Surgical No.", disabled=True),
+            "HN": st.column_config.TextColumn("HN", disabled=True),
+            "ชื่อผู้ป่วย": st.column_config.TextColumn("ชื่อผู้ป่วย", disabled=True),
+            # เปลี่ยนเป็น TextColumn เพื่อให้แสดงผลตามที่เรา Format ไว้เป็น วว/ดด/ปปปป
+            "กำหนดทิ้งสุดท้าย": st.column_config.TextColumn("กำหนดทิ้ง", disabled=True),
+        },
+        use_container_width=True,
+        hide_index=True
+    )
+    
+    # 4. ยืนยันการทิ้ง (เหมือนเดิม)
+    if st.button("🗑️ ยืนยันการทิ้งเคสที่เลือก", type="primary"):
+        selected_cases = edited_df[edited_df["เลือก"] == True]
+        if not selected_cases.empty:
+            df.loc[df["Surgical No."].isin(selected_cases["Surgical No."]), ["การทิ้งชิ้นเนื้อ", "วันที่กดทิ้ง"]] = ["ทิ้งแล้ว", pd.Timestamp(th_date)]
+            st.success(f"ทิ้งเรียบร้อยแล้ว {len(selected_cases)} เคส")
+            st.rerun()
+        else:
+            st.warning("กรุณาเลือกเคสที่ต้องการทิ้งก่อน")
+else:
+    st.info("วันนี้ไม่มีรายการที่ต้องทิ้ง")
