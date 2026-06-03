@@ -7,7 +7,8 @@ st.set_page_config(layout="wide")
 
 # 1. ตั้งชื่อหัวข้อบนหน้าเว็บ
 st.title("ระบบสรุปรายการทิ้ง Specimen ประจำวัน 🔬")
-th_date = datetime.date.today() + datetime.timedelta(hours=7)
+# ใช้ .now() เพื่อดึงเวลาปัจจุบัน (รวมชั่วโมง) แล้วบวก 7 ชม. เพื่อเข้า Timezone ไทย
+th_date = (datetime.datetime.now() + datetime.timedelta(hours=7)).date()
 st.write(f"ประจำวันที่: {th_date.strftime('%d/%m/%Y')}")
 # 2. จำลองข้อมูลสิ่งส่งตรวจและใช้ Session State บันทึกข้อมูล
 if "df" not in st.session_state:
